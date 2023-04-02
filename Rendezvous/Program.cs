@@ -3,50 +3,68 @@ using System.Threading;
 
 class Program
 {
-    static SemaphoreSlim semaphore1 = new SemaphoreSlim(0);
-    static SemaphoreSlim semaphore2 = new SemaphoreSlim(0);
+    static Semaphore sem1 = new Semaphore(0, 1);
+    static Semaphore sem2 = new Semaphore(0, 1);
+    static Semaphore sem3 = new Semaphore(0, 1);
+    
 
     static void Main(string[] args)
     {
-        
-        Thread thread1 = new Thread(Thread1Function);
-        thread1.Start();
+        Thread t1 = new Thread(Processo1);
+        Thread t2 = new Thread(Processo2);
+        Thread t3 = new Thread(Processo3);
 
-        
-        Thread thread2 = new Thread(Thread2Function);
-        thread2.Start();
+        t1.Start();
+        t2.Start();
+        t3.Start();
 
-        // Aguarda as threads terminarem
-        thread1.Join();
-        thread2.Join();
+        t1.Join();
+        t2.Join();
+        t3.Join();
 
-        Console.WriteLine("Programa finalizado");
+        Console.WriteLine("Todos os processos se encontraram!");
     }
 
-    static void Thread1Function()
+    static void Processo1()
     {
-        Console.WriteLine("Thread 1 - primeira etapa"+ DateTime.Now);
-        Thread.Sleep(10000); //as threads se encontraram depois de 5 segundos
-        // Sinaliza o semáforo 1 para a thread 2 continuar
-        semaphore1.Release();
+        Console.WriteLine("Processo 1 está pronto para se encontrar com o Processo 2...");
+        sem1.Release();
+        sem2.WaitOne();
 
-        // Aguarda o semáforo 2 para continuar
-        semaphore2.Wait();
+        Console.WriteLine("Processo 1 está pronto para se encontrar com o Processo 3...");
+        sem1.Release();
+        sem3.WaitOne(); //fecho o semforo 3 pra sincronizar com o processo 2
 
-        Console.WriteLine("Thread 1 - segunda etapa" + DateTime.Now );
     }
 
-    static void Thread2Function()
+    static void Processo2()
     {
-        Thread.Sleep(3000);
-        Console.WriteLine("Thread 2 - primeira etapa" + DateTime.Now);
+        Console.WriteLine("Processo 2 está pronto para se encontrar com o Processo 1...");
+        sem2.Release();
+        sem1.WaitOne(); //fecho semaforo 1 para sincronizar com o processo 3
 
-        // Aguarda o semáforo 1 para continuar
-        semaphore1.Wait();
+        Console.WriteLine("\n1-------------------3... esperando 2...\n");
 
-        // Sinaliza o semáforo 2 para a thread 1 continuar
-        semaphore2.Release();
 
-        Console.WriteLine("Thread 2 - segunda etapa"+ DateTime.Now);
+        Console.WriteLine("Processo 2 está pronto para se encontrar com o Processo 3...");
+        sem2.Release();
+        sem3.WaitOne();
+
+    }
+
+    static void Processo3()
+    {
+        Console.WriteLine("\n1------------------------2... esperando 3...\n");
+
+        Console.WriteLine("Processo 3 está pronto para se encontrar com o Processo 1...");
+        sem3.Release();
+        sem1.WaitOne();
+
+        Console.WriteLine("Processo 3 está pronto para se encontrar com o Processo 2...");
+        sem3.Release();
+        sem2.WaitOne();
+
+        Console.WriteLine("\n!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
     }
 }
