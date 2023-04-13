@@ -3,68 +3,46 @@ using System.Threading;
 
 class Program
 {
-    static Semaphore sem1 = new Semaphore(0, 1);
-    static Semaphore sem2 = new Semaphore(0, 1);
-    static Semaphore sem3 = new Semaphore(0, 1);
-    
+    static SemaphoreSlim friend1Arrived = new SemaphoreSlim(0,1);
+    static SemaphoreSlim friend2Arrived = new SemaphoreSlim(0,1);
+    static SemaphoreSlim friend3Arrived = new SemaphoreSlim(0,1);
 
     static void Main(string[] args)
     {
-        Thread t1 = new Thread(Processo1);
-        Thread t2 = new Thread(Processo2);
-        Thread t3 = new Thread(Processo3);
+        Thread friend1Thread = new Thread(Friend1);
+        Thread friend2Thread = new Thread(Friend2);
+        Thread friend3Thread = new Thread(Friend3);
 
-        t1.Start();
-        t2.Start();
-        t3.Start();
+        friend1Thread.Start();
+        friend2Thread.Start();
+        friend3Thread.Start();
 
-        t1.Join();
-        t2.Join();
-        t3.Join();
+        friend1Arrived.Wait(); // espera até que o amigo 1 encontre os outros amigos
 
-        Console.WriteLine("Todos os processos se encontraram!");
+        Console.WriteLine("Todos estão juntos, podem viajar!");
     }
 
-    static void Processo1()
+    static void Friend1()
     {
-        Console.WriteLine("Processo 1 está pronto para se encontrar com o Processo 2...");
-        sem1.Release();
-        sem2.WaitOne();
-
-        Console.WriteLine("Processo 1 está pronto para se encontrar com o Processo 3...");
-        sem1.Release();
-        sem3.WaitOne(); //fecho o semforo 3 pra sincronizar com o processo 2
-
+        Console.WriteLine("O amigo 1 chegou no aeroporto.");
+        friend2Arrived.Wait(); // espera pelo amigo 2
+       
+        Console.WriteLine("o amigo 1 encontrou o amigo 2 e 3");
+        friend1Arrived.Release(); // sinaliza que encontrou os amigos
     }
 
-    static void Processo2()
+    static void Friend2()
     {
-        Console.WriteLine("Processo 2 está pronto para se encontrar com o Processo 1...");
-        sem2.Release();
-        sem1.WaitOne(); //fecho semaforo 1 para sincronizar com o processo 3
-
-        Console.WriteLine("\n1-------------------3... esperando 2...\n");
-
-
-        Console.WriteLine("Processo 2 está pronto para se encontrar com o Processo 3...");
-        sem2.Release();
-        sem3.WaitOne();
-
+        Console.WriteLine("O amigo 2 chegou no aeroporto.");
+        
+        friend3Arrived.Wait(); // espera pelo amigo 3
     }
 
-    static void Processo3()
+    static void Friend3()
     {
-        Console.WriteLine("\n1------------------------2... esperando 3...\n");
-
-        Console.WriteLine("Processo 3 está pronto para se encontrar com o Processo 1...");
-        sem3.Release();
-        sem1.WaitOne();
-
-        Console.WriteLine("Processo 3 está pronto para se encontrar com o Processo 2...");
-        sem3.Release();
-        sem2.WaitOne();
-
-        Console.WriteLine("\n!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-
+        Console.WriteLine("O amigo 3 chegou no aeroporto");
+      
+        friend2Arrived.Release();
+        friend3Arrived.Release(); // sinaliza que chegou ao amigo 1
     }
 }
